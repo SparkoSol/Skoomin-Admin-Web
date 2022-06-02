@@ -248,6 +248,9 @@ export default {
                     const user = await this.authRegister();
                     if (user && user.uid) {
                         console.log('add contract')
+                        this.contract.contract_amount = parseInt(this.contract.contract_amount)
+                        this.contract.start_date = new Date(this.contract.start_date)
+                        this.contract.end_date = new Date(this.contract.end_date)
                         this.school.contracts.push(this.contract);
                         console.log('add country')
                         this.school.country = this.school.country.name;
