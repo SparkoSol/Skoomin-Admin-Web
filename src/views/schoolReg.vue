@@ -8,6 +8,14 @@
         </v-dialog>
         <!-- SCHOOL DETAILS -->
         <v-card class="mx-auto pa-6" max-width="800">
+            <v-col class=" pa-0 ma-0">
+                <v-col class="d-flex justify-end" style="gap: 15px">
+                    <router-link to="/">
+                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        </v-btn>
+                    </router-link>
+                </v-col>
+            </v-col>
             <v-card-title class="justify-center" style="font-size: 28px;">School Detail</v-card-title>
             <v-form @submit.prevent="register" lazy-validation ref="form">
                 <v-col class="d-flex pa-0 ma-0">
@@ -247,23 +255,16 @@ export default {
                     this.loading = true
                     const user = await this.authRegister();
                     if (user && user.uid) {
-                        console.log('add contract')
                         this.contract.contract_amount = parseInt(this.contract.contract_amount)
                         this.contract.start_date = new Date(this.contract.start_date)
                         this.contract.end_date = new Date(this.contract.end_date)
                         this.school.contracts.push(this.contract);
-                        console.log('add country')
                         this.school.country = this.school.country.name;
-                        console.log('add school')
                         const addedDoc = await addDoc(schools, this.school);
                         console.log(addedDoc);
-                        console.log('set school id')
                         this.principle.school_id = addedDoc.id;
-                        console.log('add principle')
                         const principleRef = doc(db, "principle", user.uid);
-                        console.log(principleRef);
                         const addedDoc2 = await setDoc(principleRef, this.principle);
-                        console.log("created");
                         console.log(addedDoc);
                         console.log(addedDoc2);
                         this.loading = false

@@ -8,6 +8,14 @@
         </v-dialog>
         <!-- SCHOOL DETAILS -->
         <v-card class="mx-auto pa-6" max-width="800">
+            <v-col class=" pa-0 ma-0">
+                <v-col class="d-flex justify-end" style="gap: 15px">
+                    <router-link to="/">
+                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        </v-btn>
+                    </router-link>
+                </v-col>
+            </v-col>
             <v-card-title class="justify-center" style="font-size: 28px;">School Detail</v-card-title>
             <v-form @submit.prevent="update" ref="form" lazy-validation>
                 <v-col class="d-flex pa-0 ma-0">
@@ -88,9 +96,10 @@
                         </v-text-field>
                     </v-col>
                 </v-col>
-
+                
                 <v-col>
-                    <v-btn :disabled="countriesLoading || statesLoading || citiesLoading" type="submit" color="#12AD2B">
+                    <v-btn class="mt-10" :disabled="countriesLoading || statesLoading || citiesLoading" type="submit"
+                        color="#12AD2B">
                         Update
                     </v-btn>
                 </v-col>
@@ -106,6 +115,7 @@ import { db } from "../firebase";
 import { getDoc, doc, query, where, getDocs, updateDoc } from "@firebase/firestore";
 import { principles, schools } from '../firebase';
 import axios from "axios";
+import dayjs from 'dayjs'
 
 export default {
     data() {
@@ -141,13 +151,23 @@ export default {
             cities: [],
             countriesLoading: false,
             statesLoading: false,
-            citiesLoading: false
-
+            citiesLoading: false,
+            headers: [
+                {
+                    text: 'Start Date', value: "start"
+                },
+                { text: 'End Date', value: 'end' },
+                { text: 'Amount', value: 'contract_amount' },
+            ],
+            items: []
         }
     },
 
     methods: {
         required, email,
+        formatDate(date) {
+            return dayjs(date.seconds).format('DD/MM/YYYY')
+        },
         async getCountries() {
             try {
                 this.countriesLoading = true
@@ -191,16 +211,18 @@ export default {
                 const docRef = doc(db, 'school', id.toString())
                 const snapshot = await getDoc(docRef)
                 if (snapshot.exists()) {
-                    console.log(snapshot.data())
+                    // console.log(snapshot.data())
                     this.school.phone = snapshot.data().phone
                     this.school.name = snapshot.data().name
                     this.school.email = snapshot.data().email
                     this.school.code = snapshot.data().code
                     this.school.secret_code = snapshot.data().secret_code
+                    console.log(snapshot.data().contracts)
+                    this.items = snapshot.data().contracts
+
                     this.school.country = snapshot.data().country
                     this.school.state = snapshot.data().state
                     this.school.city = snapshot.data().city
-                    console.log(id)
                 } else {
                     console.log('no doc')
                 }

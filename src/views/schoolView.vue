@@ -1,6 +1,14 @@
 <template>
     <div>
         <v-card :loading="dataLoading" class="mx-auto pa-6" max-width="800">
+            <v-col class=" pa-0 ma-0">
+                <v-col class="d-flex justify-end" style="gap: 15px">
+                    <router-link to="/">
+                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        </v-btn>
+                    </router-link>
+                </v-col>
+            </v-col>
             <v-card-title style="color: green;">School Details</v-card-title>
             <v-col class="d-flex">
                 <v-card-text>Phone #</v-card-text>
@@ -33,22 +41,86 @@
                 <v-card-text>{{ principlePhone }}</v-card-text>
             </v-col>
 
-            <v-card-title style="color: green;">Contracts</v-card-title>
+            <v-col>
+                <v-row justify="space-between">
+                    <v-card-title style="color: green;">Contracts</v-card-title>
+                    <v-btn color="primary" @click="contractDialog = !contractDialog" dark>Add new</v-btn>
+                </v-row>
+            </v-col>
+
             <v-card>
-                <v-data-table :headers="headers" :items="desserts"></v-data-table>
+                <v-data-table :items="items" :headers="headers" hide-default-footer disable-pagination>
+                    <template #item.start="{ item }">
+                        {{ formatDate(item.start_date) }}
+                    </template>
+                    <template #item.end="{ item }">
+                        {{ formatDate(item.end_date) }}
+                    </template>
+                </v-data-table>
             </v-card>
         </v-card>
+
+
+        <v-dialog max-width="600" v-model="contractDialog" persistent>
+            <v-card style="padding: 20px;">
+                <v-form ref="contractForm">
+                    <v-row class="flex-column span-2" style="margin-top: 20px;">
+                        <v-col class="d-flex pa-0 ma-0">
+                            <v-col>
+                                <v-text-field :rules="[required()]" outlined label="Contract Start Date" type="date"
+                                    v-model="contract.start_date">
+                                </v-text-field>
+                            </v-col>
+                        </v-col>
+                        <v-col class="pa-0 ma-0">
+                            <v-col>
+                                <v-text-field :rules="[required()]" outlined label="Contract Last Date" type="date"
+                                    v-model="contract.end_date">
+                                </v-text-field>
+                            </v-col>
+                        </v-col>
+                        <v-col class=" pa-0 ma-0">
+                            <v-col>
+                                <v-text-field :rules="[required()]" type="number" label="Contract Amount"
+                                    v-model="contract.contract_amount" required outlined>
+                                </v-text-field>
+                            </v-col>
+                        </v-col>
+                        <v-col class=" pa-0 ma-0">
+                            <v-col class="d-flex justify-end" style="gap: 15px">
+                                <v-btn outlined color="primary" elevation="0" @click="contractDialog = false">Cancel
+                                </v-btn>
+                                <v-btn dark color="primary" elevation="0" @click="addContract">Add
+                                </v-btn>
+                            </v-col>
+                        </v-col>
+                    </v-row>
+                </v-form>
+            </v-card>
+        </v-dialog>
+        <LoadingDialog v-model="loading" message="Loading..." />
+        <ErrorDialog v-model="error" :error="errorVal" />
     </div>
 </template>
 
 <script>
-import { principles } from '../firebase'
-import { db } from "../firebase";
-import { getDoc, doc, where, query, getDocs } from "@firebase/firestore";
+import { required, email } from '@/utils/validators';
+
+import { db, schools, principles } from '../firebase'
+import { getDoc, doc, query, where, getDocs, updateDoc } from "@firebase/firestore";
+
+import dayjs from 'dayjs'
+import LoadingDialog from '../components/LoadingDialog.vue';
+import ErrorDialog from '../components/ErrorDialog.vue';
+
 
 export default {
     data() {
         return {
+            loading: false,
+            error: false,
+            errorVal: {},
+            contractDialog: false,
             dataLoading: true,
             tab: 0,
             school__id: this.$route.query.id,
@@ -61,77 +133,105 @@ export default {
             principleName: null,
             principleEmail: null,
             principlePhone: null,
+            school: null,
             headers: [
                 {
-                    text: 'Start Date',
-                    value: 'startDate',
+                    text: "Start Date",
+                    value: "start"
                 },
-                { text: 'End Date', value: 'endDate' },
-                { text: 'Amount', value: 'amount' },
+                { text: "End Date", value: "end" },
+                { text: "Amount", value: "contract_amount" },
             ],
-            desserts: [
-                {
-                    startDate: "10/1/20",
-                    endDate: "11/1/22",
-                    amount: "120"
-                }
-            ]
-        }
+            contract: {
+                start_date: null,
+                end_date: null,
+                contract_amount: null,
+            },
+            items: []
+        };
     },
     methods: {
+        required,
+        email,
+        formatDate(date) {
+            return dayjs(date.seconds).format("DD/MM/YYYY");
+        },
+        async addContract() {
+            if (this.$refs.contractForm.validate()) {
+                try {
+                    this.loading = true;
+                    console.log(this.contract);
+                    console.log(this.school);
+                    this.contract.start_date = new Date(this.contract.start_date);
+                    this.contract.end_date = new Date(this.contract.end_date);
+                    this.school.contracts.push(this.contract);
+
+                    let schoolsRef = doc(schools, this.school.id);
+                    await updateDoc(schoolsRef, {
+                        contracts: this.school.contracts,
+                    });
+                    this.loadData()
+                    this.loading = false;
+                    this.contractDialog = false
+                } catch (e) {
+                    this.loading = false
+                    this.error = true
+                    this.errorVal = {
+                        title: 'Error adding new contract',
+                        description: e?.error || e?.message || 'Some error occured. Try again later.'
+                    }
+                }
+            }
+        },
         async loadData() {
             try {
-                this.dataLoading = true
-                const id = this.$route.query.id
-                const docRef = doc(db, 'school', id.toString())
-                const snapshot = await getDoc(docRef)
-                if (snapshot.exists()) {
-                    console.log(snapshot.data())
-                    this.schoolPhone = snapshot.data().phone
-                    this.schoolEmail = snapshot.data().email
-                    this.schoolCode = snapshot.data().code
-                    this.country = snapshot.data().country
-                    this.state = snapshot.data().state
-                    this.city = snapshot.data().city
-                    this.dataLoading = false
-                } else {
-                    console.log('no doc')
-                }
-            } catch (e) {
-                console.log(e)
-            }
-            this.dataLoading = false
+                this.loading = true
+                const docRef = doc(db, "school", this.$route.query.id.toString());
+                const school = await getDoc(docRef);
+                if (school.exists()) {
+                    // console.log(snapshot.data())
+                    this.school = { id: school.id, ...school.data() };
+                    this.schoolPhone = school.data().phone;
+                    this.schoolEmail = school.data().email;
+                    this.schoolCode = school.data().code;
+                    this.country = school.data().country;
+                    this.state = school.data().state;
+                    this.city = school.data().city;
+                    this.items = school.data().contracts;
 
-            try {
-                this.dataLoading = true
-                const id = this.$route.query.id
-                let q
-                if (this.tab == 0) {
-                    q = query(principles, where("school_id", "==", id));
-                } else {
-                    q = query(principles, where("school_id", "==", id));
+                    let q;
+                    if (this.tab == 0) {
+                        q = query(principles, where("school_id", "==", this.$route.query.id.toString()));
+                    }
+                    else {
+                        q = query(principles, where("school_id", "==", this.$route.query.id.toString()));
+                    }
+                    const pricilple = await getDocs(q);
+                    // console.log(snapshot)
+                    const data = [];
+                    pricilple.docs.map((e) => {
+                        data.push({ id: e.id, ...e.data() });
+                    });
+                    // console.log(data[0].phone)
+                    this.principlePhone = data[0].phone;
+                    this.principleName = data[0].name;
+                    this.principleEmail = data[0].email;
                 }
-                const snapshot = await getDocs(q);
-                console.log(snapshot)
-                const data = []
-                snapshot.docs.map((e) => {
-                    data.push({ id: e.id, ...e.data() })
-                })
-                console.log(data[0].phone)
-                this.principlePhone = data[0].phone
-                this.principleName = data[0].name
-                this.principleEmail = data[0].email
-                // return data
-                this.dataLoading = false
+                this.loading = false
             } catch (e) {
-                console.log(e)
+                this.loading = false
+                this.error = true
+                this.errorVal = {
+                    title: 'Error adding new contract',
+                    description: e?.error || e?.message || 'Some error occured. Try again later.'
+                }
             }
-            this.dataLoading = false
-
+            this.dataLoading = false;
         }
     },
     mounted() {
-        this.loadData()
-    }
+        this.loadData();
+    },
+    components: { LoadingDialog, ErrorDialog }
 }
 </script>
