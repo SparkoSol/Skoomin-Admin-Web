@@ -1,11 +1,23 @@
+import dayjs from "dayjs"
+
 export function required(message = "You can't leave this field empty") {
     return (v) => !!v || message
 }
 
-export function dateValidation(value) {
-    const currentDate = new Date()
-    const givenDate = new Date(value)
-    return givenDate > currentDate || 'Incorrect Date'
+export function startDateValidation() {
+    return (v) => {
+        const givenDate = dayjs(v)
+        const date = dayjs()
+        return date.date() <= givenDate.date() && date.month() <= givenDate.month() && date.year() <= givenDate.year() || 'invalid date'
+    }
+}
+
+export function endDateValidation(selectedDate) {
+    return (v) => {
+        const givenDate = dayjs(v)
+        const date = dayjs(selectedDate)
+        return date.date() < givenDate.date() && date.month() <= givenDate.month() && date.year() <= givenDate.year() || 'invalid date'
+    }
 }
 
 export const requiredV2 = (value) =>
@@ -16,7 +28,7 @@ export function requiredPercentage(message = "Percentage is not accurate!") {
     return (v) => !!v && v > 0 && v <= 100 || message
 }
 
-export function dynamicQuestion(message){
+export function dynamicQuestion(message) {
     return (v) => !!v && v.includes("{{c") || message
 }
 

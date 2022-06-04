@@ -6,12 +6,13 @@
                 <p style="margin-left: 20px; margin-bottom: 0;"> Please wait</p>
             </v-card>
         </v-dialog>
+
         <!-- SCHOOL DETAILS -->
         <v-card class="mx-auto pa-6" max-width="800">
             <v-col class=" pa-0 ma-0">
                 <v-col class="d-flex justify-end" style="gap: 15px">
                     <router-link to="/">
-                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        <v-btn dark color="primary" elevation="0" >Back
                         </v-btn>
                     </router-link>
                 </v-col>
@@ -91,7 +92,7 @@
 
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col cols="6">
-                        <v-text-field :rules="[required()]" v-model="principle.notification_password"
+                        <v-text-field :rules="[required()]" v-model="principle.notificationPassword"
                             label="Notification Password" required outlined>
                         </v-text-field>
                     </v-col>
@@ -138,13 +139,13 @@ export default {
                 contract_amount: null,
             },
             principle: {
-                school_id: null,
+                schoolId: null,
                 name: null,
                 phone: null,
                 email: null,
-                username: null,
+                userName: null,
                 password: null,
-                notification_password: null,
+                notificationPassword: null,
             },
             countries: [],
             states: [],
@@ -165,9 +166,11 @@ export default {
 
     methods: {
         required, email,
+
         formatDate(date) {
             return dayjs(date.seconds).format('DD/MM/YYYY')
         },
+
         async getCountries() {
             try {
                 this.countriesLoading = true
@@ -179,9 +182,8 @@ export default {
             }
             this.countriesLoading = false
         },
+
         getStates() {
-            console.log('get state')
-            console.log(this.school)
             this.statesLoading = true
             if (this.school && this.school.country && typeof (this.school.country) === 'object') {
                 this.states = this.school.country.states
@@ -190,6 +192,7 @@ export default {
             }
             this.statesLoading = false
         },
+
         async getCities() {
             try {
                 this.citiesLoading = true
@@ -205,19 +208,18 @@ export default {
                 this.citiesLoading = false
             }
         },
+
         async loadData() {
             try {
                 const id = this.$route.query.id
                 const docRef = doc(db, 'school', id.toString())
                 const snapshot = await getDoc(docRef)
                 if (snapshot.exists()) {
-                    // console.log(snapshot.data())
                     this.school.phone = snapshot.data().phone
                     this.school.name = snapshot.data().name
                     this.school.email = snapshot.data().email
                     this.school.code = snapshot.data().code
                     this.school.secret_code = snapshot.data().secret_code
-                    console.log(snapshot.data().contracts)
                     this.items = snapshot.data().contracts
 
                     this.school.country = snapshot.data().country
@@ -234,9 +236,9 @@ export default {
                 const id = this.$route.query.id
                 let q
                 if (this.tabb == 0) {
-                    q = query(principles, where("school_id", "==", id));
+                    q = query(principles, where("schoolId", "==", id));
                 } else {
-                    q = query(principles, where("school_id", "==", id));
+                    q = query(principles, where("schoolId", "==", id));
                 }
                 const snapshot = await getDocs(q);
                 // console.log(snapshot)
@@ -250,7 +252,7 @@ export default {
                 // this.principle.email = data[0].email
                 this.principle.phone = data[0].phone
                 // this.principle.username = data[0].username
-                this.principle.notification_password = data[0].notification_password
+                this.principle.notificationPassword = data[0].notificationPassword
                 // this.principle.password = data[0].password
             } catch (e) {
                 console.log(e)
@@ -267,8 +269,8 @@ export default {
                         name: this.school.name,
                         phone: this.school.phone,
                         email: this.school.email,
-                        code: this.school.code,
-                        secret_code: this.school.secret_code,
+                        schoolCode: this.school.code,
+                        secretCode: this.school.secret_code,
                         country: typeof (this.school.country) === 'object' ? this.school.country.name : this.school.country,
                         state: this.school.state,
                         city: this.school.city,
@@ -283,9 +285,7 @@ export default {
                 await updateDoc(principlesRef, {
                     name: this.principle.name,
                     phone: this.principle.phone,
-                    // email: this.principle.email,
-                    // password: this.principle.password,
-                    notification_password: this.principle.notification_password,
+                    notificationPassword: this.principle.notificationPassword,
                 })
 
                 this.$router.push('/')

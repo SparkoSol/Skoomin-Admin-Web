@@ -15,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const schools = collection(db, 'school');
-const principles = collection(db, 'principle');
+const principles = collection(db, 'Principals');
 const adminAuth = collection(db, 'admin_auth');
 
 export { db, schools, principles, adminAuth };

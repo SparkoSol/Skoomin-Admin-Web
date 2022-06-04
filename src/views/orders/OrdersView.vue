@@ -53,19 +53,16 @@ export default {
         const id = item.id
         let q
         if (this.tabb == 0) {
-          q = query(principles, where("school_id", "==", id));
+          q = query(principles, where("schoolId", "==", id));
         } else {
-          q = query(principles, where("school_id", "==", id));
+          q = query(principles, where("schoolId", "==", id));
         }
         const snapshot = await getDocs(q);
-        // console.log(snapshot)
         const data = []
         snapshot.docs.map((e) => {
           data.push({ id: e.id, ...e.data() })
         })
-        // console.log(data[0])
         this.principle_id = data[0].id
-        // return data
       } catch (e) {
         console.log(e)
       }
@@ -75,8 +72,8 @@ export default {
 
       let principlesRef = doc(principles, this.principle_id)
       await deleteDoc(principlesRef)
-      // console.log(this.principle_id)
-
+      
+      this.loadData()
     },
     edit(item) {
       this.$router.push('/schoolEdit?id=' + item.id)

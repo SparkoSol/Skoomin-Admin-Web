@@ -4,7 +4,7 @@
             <v-col class=" pa-0 ma-0">
                 <v-col class="d-flex justify-end" style="gap: 15px">
                     <router-link to="/">
-                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        <v-btn dark color="primary" elevation="0" >Back
                         </v-btn>
                     </router-link>
                 </v-col>
@@ -67,15 +67,16 @@
                     <v-row class="flex-column span-2" style="margin-top: 20px;">
                         <v-col class="d-flex pa-0 ma-0">
                             <v-col>
-                                <v-text-field :rules="[required()]" outlined label="Contract Start Date" type="date"
-                                    v-model="contract.start_date">
+                                <v-text-field :rules="[required(), startDateValidation()]" outlined
+                                    label="Contract Start Date" type="date" v-model="contract.start_date">
                                 </v-text-field>
                             </v-col>
                         </v-col>
                         <v-col class="pa-0 ma-0">
                             <v-col>
-                                <v-text-field :rules="[required()]" outlined label="Contract Last Date" type="date"
-                                    v-model="contract.end_date">
+                                <v-text-field
+                                    :rules="[required(), contract.start_date ? endDateValidation(contract.start_date) : true]"
+                                    outlined label="Contract Last Date" type="date" v-model="contract.end_date">
                                 </v-text-field>
                             </v-col>
                         </v-col>
@@ -98,13 +99,15 @@
                 </v-form>
             </v-card>
         </v-dialog>
+
         <LoadingDialog v-model="loading" message="Loading..." />
+
         <ErrorDialog v-model="error" :error="errorVal" />
     </div>
 </template>
 
 <script>
-import { required, email } from '@/utils/validators';
+import { required, email, startDateValidation, endDateValidation } from '@/utils/validators';
 
 import { db, schools, principles } from '../firebase'
 import { getDoc, doc, query, where, getDocs, updateDoc } from "@firebase/firestore";
@@ -153,15 +156,17 @@ export default {
     methods: {
         required,
         email,
+        startDateValidation,
+        endDateValidation,
+
         formatDate(date) {
             return dayjs(date.seconds).format("DD/MM/YYYY");
         },
+
         async addContract() {
             if (this.$refs.contractForm.validate()) {
                 try {
                     this.loading = true;
-                    console.log(this.contract);
-                    console.log(this.school);
                     this.contract.start_date = new Date(this.contract.start_date);
                     this.contract.end_date = new Date(this.contract.end_date);
                     this.school.contracts.push(this.contract);
@@ -183,15 +188,15 @@ export default {
                 }
             }
         },
+
         async loadData() {
             try {
                 this.loading = true
                 const docRef = doc(db, "school", this.$route.query.id.toString());
                 const school = await getDoc(docRef);
                 if (school.exists()) {
-                    // console.log(snapshot.data())
                     this.school = { id: school.id, ...school.data() };
-                    this.schoolPhone = school.data().phone;
+                    this.schoolPhone = school.data().phone || 'No Phone';
                     this.schoolEmail = school.data().email;
                     this.schoolCode = school.data().code;
                     this.country = school.data().country;
@@ -200,20 +205,17 @@ export default {
                     this.items = school.data().contracts;
 
                     let q;
-                    if (this.tab == 0) {
-                        q = query(principles, where("school_id", "==", this.$route.query.id.toString()));
-                    }
-                    else {
-                        q = query(principles, where("school_id", "==", this.$route.query.id.toString()));
-                    }
+                    q = query(principles, where("schoolId", "==", this.$route.query.id));
+                    console.log(this.$route.query.id)
+                    console.log(q)
                     const pricilple = await getDocs(q);
-                    // console.log(snapshot)
+                    console.log(pricilple)
                     const data = [];
                     pricilple.docs.map((e) => {
                         data.push({ id: e.id, ...e.data() });
                     });
-                    // console.log(data[0].phone)
-                    this.principlePhone = data[0].phone;
+                    console.log(data, 'DATA')
+                    this.principlePhone = data[0].phone || 'No Phone';
                     this.principleName = data[0].name;
                     this.principleEmail = data[0].email;
                 }
@@ -232,6 +234,7 @@ export default {
     mounted() {
         this.loadData();
     },
+
     components: { LoadingDialog, ErrorDialog }
 }
 </script>

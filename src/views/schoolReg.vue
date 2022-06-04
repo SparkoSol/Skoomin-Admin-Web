@@ -6,12 +6,13 @@
                 <p style="margin-left: 20px; margin-bottom: 0;">Please wait</p>
             </v-card>
         </v-dialog>
+
         <!-- SCHOOL DETAILS -->
         <v-card class="mx-auto pa-6" max-width="800">
             <v-col class=" pa-0 ma-0">
                 <v-col class="d-flex justify-end" style="gap: 15px">
                     <router-link to="/">
-                        <v-btn dark color="primary" elevation="0" @click="router - link">Back
+                        <v-btn dark color="primary" elevation="0">Back
                         </v-btn>
                     </router-link>
                 </v-col>
@@ -39,16 +40,16 @@
                     </v-col>
 
                     <v-col>
-                        <v-text-field :rules="[required()]" type="number" v-model="school.code" label="School Code "
-                            required outlined>
+                        <v-text-field :rules="[required()]" type="number" v-model="school.code"
+                            label="School Code " required outlined>
                         </v-text-field>
                     </v-col>
                 </v-col>
 
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col cols="6">
-                        <v-text-field :rules="[required()]" type="number" v-model="school.secret_code" label="Secret Code"
-                            required outlined>
+                        <v-text-field :rules="[required()]" type="number" v-model="school.secret_code"
+                            label="Secret Code" required outlined>
                         </v-text-field>
                     </v-col>
                     <v-col cols="6">
@@ -96,7 +97,7 @@
                     </v-col>
 
                     <v-col>
-                        <v-text-field :rules="[required()]" v-model="principle.username" label="Principle Username "
+                        <v-text-field :rules="[required()]" v-model="principle.userName" label="Principle Username "
                             required outlined>
                         </v-text-field>
                     </v-col>
@@ -109,8 +110,8 @@
                         </v-text-field>
                     </v-col>
                     <v-col cols="6">
-                        <v-text-field :rules="[required()]" v-model="principle.notification_password" label="Notification Password"
-                            required outlined>
+                        <v-text-field :rules="[required()]" v-model="principle.notificationPassword"
+                            label="Notification Password" required outlined>
                         </v-text-field>
                     </v-col>
                 </v-col>
@@ -120,14 +121,15 @@
                 <v-card-title class="justify-center" style="font-size: 28px;">First Contract</v-card-title>
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col>
-                        <v-text-field :rules="[required()]" outlined label="Contract Start Date" type="date"
-                            v-model="contract.start_date">
+                        <v-text-field :rules="[required(), startDateValidation()]" outlined label="Contract Start Date"
+                            type="date" v-model="contract.start_date">
                         </v-text-field>
                     </v-col>
 
                     <v-col>
-                        <v-text-field :rules="[required()]" outlined label="Contract Last Date" type="date"
-                            v-model="contract.end_date">
+                        <v-text-field
+                            :rules="[required(), contract.start_date ? endDateValidation(contract.start_date) : true]"
+                            outlined label="Contract Last Date" type="date" v-model="contract.end_date">
                         </v-text-field>
                     </v-col>
 
@@ -141,18 +143,19 @@
                 </v-col>
                 <v-col>
                     <v-btn v-if="required" :disabled="countriesLoading || statesLoading || citiesLoading" type="submit"
-                        color="#12AD2B">
+                        color="primary" dark>
                         Register
                     </v-btn>
                 </v-col>
             </v-form>
         </v-card>
+
         <ErrorDialog v-model="error" :error="errorVal" />
     </div>
 </template>
 
 <script>
-import { required, email } from '@/utils/validators';
+import { required, email, startDateValidation, endDateValidation } from '@/utils/validators';
 
 import { schools, db } from '../firebase';
 import { addDoc, setDoc, doc } from '@firebase/firestore';
@@ -191,13 +194,13 @@ export default {
                 contract_amount: null,
             },
             principle: {
-                school_id: null,
+                schoolId: null,
                 name: null,
                 phone: null,
                 email: null,
-                username: null,
+                userName: null,
                 password: null,
-                notification_password: null,
+                notificationPassword: null,
             },
             countries: [],
             states: [],
@@ -213,6 +216,8 @@ export default {
     methods: {
         email,
         required,
+        startDateValidation,
+        endDateValidation,
         async getCountries() {
             try {
                 this.countriesLoading = true;
@@ -225,14 +230,14 @@ export default {
             }
             this.countriesLoading = false;
         },
+
         getStates() {
-            console.log("get state");
-            console.log(this.school);
             this.statesLoading = true;
             if (this.school && this.school.country)
                 this.states = this.school.country.states;
             this.statesLoading = false;
         },
+
         async getCities() {
             try {
                 this.citiesLoading = true;
@@ -249,6 +254,7 @@ export default {
                 this.citiesLoading = false;
             }
         },
+
         async register() {
             if (this.$refs.form.validate()) {
                 try {
@@ -261,9 +267,9 @@ export default {
                         this.school.contracts.push(this.contract);
                         this.school.country = this.school.country.name;
                         const addedDoc = await addDoc(schools, this.school);
-                        console.log(addedDoc);
-                        this.principle.school_id = addedDoc.id;
-                        const principleRef = doc(db, "principle", user.uid);
+                        this.principle.schoolId = addedDoc.id;
+                        this.principle.isActive = true
+                        const principleRef = doc(db, "Principals", user.uid);
                         const addedDoc2 = await setDoc(principleRef, this.principle);
                         console.log(addedDoc);
                         console.log(addedDoc2);
@@ -289,14 +295,11 @@ export default {
                 }
             }
         },
+
         async authRegister() {
             try {
-                console.log('adding user')
                 const userCredential = await createUserWithEmailAndPassword(auth, this.principle.email, this.principle.password)
-                console.log(userCredential)
                 const user = userCredential.user;
-                console.log(user);
-                console.log(user.uid);
                 this.auth_uid = user.uid;
                 return user;
             } catch (error) {
@@ -309,6 +312,7 @@ export default {
             }
         }
     },
+
     components: { ErrorDialog }
 }
 </script>
