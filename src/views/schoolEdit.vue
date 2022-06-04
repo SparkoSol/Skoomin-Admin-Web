@@ -100,7 +100,7 @@
                 
                 <v-col>
                     <v-btn class="mt-10" :disabled="countriesLoading || statesLoading || citiesLoading" type="submit"
-                        color="#12AD2B">
+                        color="primary" dark>
                         Update
                     </v-btn>
                 </v-col>
