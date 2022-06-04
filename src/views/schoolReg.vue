@@ -75,16 +75,16 @@
 
 
                 <!-- PRINCIPLE DETAILS -->
-                <v-card-title class="justify-center" style="font-size: 28px;">Principle Detail</v-card-title>
+                <v-card-title class="justify-center" style="font-size: 28px;">Principal Detail</v-card-title>
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col>
-                        <v-text-field :rules="[required()]" v-model="principle.name" label="Principle Name" required
+                        <v-text-field :rules="[required()]" v-model="principle.name" label="Principal Name" required
                             outlined></v-text-field>
                     </v-col>
 
                     <v-col>
                         <v-text-field :rules="[required()]" type="number" v-model="principle.phone"
-                            label="Principle Phone #" required outlined>
+                            label="Principal Phone #" required outlined>
                         </v-text-field>
                     </v-col>
                 </v-col>
@@ -92,12 +92,12 @@
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col>
                         <v-text-field :rules="[required()]" type="email" v-model="principle.email"
-                            label="Principle Email" required outlined>
+                            label="Principal Email" required outlined>
                         </v-text-field>
                     </v-col>
 
                     <v-col>
-                        <v-text-field :rules="[required()]" v-model="principle.userName" label="Principle Username "
+                        <v-text-field :rules="[required()]" v-model="principle.userName" label="Principal Username "
                             required outlined>
                         </v-text-field>
                     </v-col>
@@ -105,7 +105,7 @@
 
                 <v-col class="d-flex pa-0 ma-0">
                     <v-col cols="6">
-                        <v-text-field :rules="[required()]" v-model="principle.password" label="Principle's Password"
+                        <v-text-field :rules="[required()]" v-model="principle.password" label="Principal's Password"
                             required outlined>
                         </v-text-field>
                     </v-col>

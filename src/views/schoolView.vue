@@ -27,7 +27,7 @@
                 <v-card-text style="text-transform: uppercase;">{{ city }}, {{ state }}, {{ country }}</v-card-text>
             </v-col>
 
-            <v-card-title style="color: green;">Principle Details</v-card-title>
+            <v-card-title style="color: green;">Principal Details</v-card-title>
             <v-col class="d-flex">
                 <v-card-text>Name</v-card-text>
                 <v-card-text>{{ principleName }}</v-card-text>
